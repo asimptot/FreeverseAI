@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .copy-button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .separator {
+            margin: 30px 0;
+            border-top: 2px solid #ddd;
+        }
+    </style>
+    <script>
+        // JavaScript to handle grammar check via API
+        async function checkGrammar() {
+            const inputText = document.getElementById("grammarInput").value;
+            const response = await fetch("/check-grammar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({ text: inputText }),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById("grammarOutput").innerText = data.corrected_text || "Error";
+            } else {
+                document.getElementById("grammarOutput").innerText = "An error occurred.";
+            }
+        }
+
+        // JavaScript to handle translation via API
+        async function checkTranslation() {
+            const inputText = document.getElementById("translationInput").value;
+            const targetLanguage = document.getElementById("languageInput").value;
+            const response = await fetch("/translate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({ text: inputText, language: targetLanguage }),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById("translationOutput").innerText = data.translated_text || "Error";
+            } else {
+                document.getElementById("translationOutput").innerText = "An error occurred.";
+            }
+        }
+		
+		function formatBugDescription(text) {
+		// Replace specific sections with bold text, ensuring no ** is displayed
+		let formattedText = text.replace(/(Title:|Priority:|Severity:|Description:|Prerequisites:|Steps to Reproduce:|Expected Result:|Actual Result:|Recovery State:|Reproducibility Rate:|Attachments:)/g, function(match) {
+			return `<strong>${match}</strong>`; // Only apply bold formatting without ** symbols
+		});
+
+		// Convert "Steps to Reproduce" section's number list to bullet points
+		formattedText = formattedText.replace(/Steps to Reproduce:\s*(\d+\..*)/g, function(match, p1) {
+			const steps = p1.split('\n').map(step => `<li>${step.trim()}</li>`).join('');
+			return `<strong>Steps to Reproduce:</strong><ul>${steps}</ul>`;
+		});
+
+		// Replace line breaks with <br> to ensure the text displays line-by-line
+		formattedText = formattedText.replace(/\n/g, "<br>");
+		
+		return formattedText;
+	}
+
+    // JavaScript to handle bug description improvement via API
+    async function improveBugDescription() {
+        const descriptionText = document.getElementById("bugDescriptionInput").value;
+        const response = await fetch("/bug-control", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ description: descriptionText }),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const formattedText = formatBugDescription(data.bug_description);
+            document.getElementById("bugDescriptionOutput").innerHTML = formattedText || "Error";
+        } else {
+            document.getElementById("bugDescriptionOutput").innerText = "An error occurred.";
+        }
+    }
+
+        // Function to copy the text to the clipboard
+        function copyToClipboard(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Text copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy text: " + err);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Flask Integration Example</h1>
+        
+        <!-- Form to check grammar -->
+        <form onsubmit="event.preventDefault(); checkGrammar();">
+            <label for="grammarInput">Enter text for grammar check:</label>
+            <input type="text" id="grammarInput" name="text" required placeholder="Type your text here...">
+            <button type="submit">Check Grammar</button>
+        </form>
+        <div class="output">
+            <p><strong>Corrected Grammar:</strong> <span id="grammarOutput"></span></p>
+            <button class="copy-button" onclick="copyToClipboard('grammarOutput')">Copy</button>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Form to translate text -->
+        <form onsubmit="event.preventDefault(); checkTranslation();">
+            <label for="translationInput">Enter text for translation:</label>
+            <input type="text" id="translationInput" name="text" required placeholder="Type text to translate...">
+            
+            <label for="languageInput">Select target language:</label>
+            <select id="languageInput" name="language" required>
+                <option value="English">English</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Italian">Italian</option>
+                <option value="Dutch">Dutch</option>
+                <option value="Portuguese">Portuguese</option>
+                <option value="Russian">Russian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Arabic">Arabic</option>
+            </select>
+            
+            <button type="submit">Translate</button>
+        </form>
+        <div class="output">
+            <p><strong>Translated Text:</strong> <span id="translationOutput"></span></p>
+            <button class="copy-button" onclick="copyToClipboard('translationOutput')">Copy</button>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Form to improve bug description -->
+        <form onsubmit="event.preventDefault(); improveBugDescription();">
+            <label for="bugDescriptionInput">Enter bug description for improvement:</label>
+            <textarea id="bugDescriptionInput" name="description" required placeholder="Describe the bug..."></textarea>
+            <button type="submit">Improve Bug Description</button>
+        </form>
+        <div class="output">
+            <p><span id="bugDescriptionOutput"></span></p>
+            <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutput')">Copy</button>
+        </div>
+    </div>
+</body>
+</html>
