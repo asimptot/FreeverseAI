@@ -262,22 +262,18 @@
          if (response.ok) {
          const data = await response.json();
          chatBox.innerHTML += `<strong>You:</strong> ${userInput}<br><strong>Bot:</strong> ${data.response}<br><br>`;
-         document.getElementById("chatInput").value = ''; // Clear input field
+         document.getElementById("chatInput").value = '';
          } else {
          chatBox.innerHTML += "An error occurred. Please try again.<br><br>";
          }
          }
-         
-         
-         
-         
          
          async function improveBugDescription() {
          const descriptionText = document.getElementById("bugDescriptionInput").value;
          const response = await fetch("/bug-control", {
          method: "POST",
          headers: {
-             "Content-Type": "application/x-www-form-urlencoded",
+         "Content-Type": "application/x-www-form-urlencoded",
          },
          body: new URLSearchParams({ description: descriptionText }),
          });
@@ -290,12 +286,28 @@
          }
          }
          
-         
          function formatBugDescription(description) {
-             return description.replace(/\*\*(.*?)\*\*/g, '$1'); // Example of formatting
+             return description.replace(/\*\*(.*?)\*\*/g, '$1');
          }
          
-         window.onload = () => switchTab(4); // Default to first tab
+         async function addTestCases() {
+         const inputText = document.getElementById("tcInput").value;
+         const response = await fetch("/add-testcases", {
+         method: "POST",
+         headers: {
+         "Content-Type": "application/x-www-form-urlencoded",
+         },
+         body: new URLSearchParams({ text: inputText }),
+         });
+         if (response.ok) {
+         const data = await response.json();
+         document.getElementById("tcOutput").innerText = data.test_cases || "Error";
+         } else {
+         document.getElementById("tcOutput").innerText = "An error occurred.";
+         }
+         }
+         
+         window.onload = () => switchTab(4);
       </script>
    </head>
    <body>
@@ -307,6 +319,7 @@
             <div class="tab" onclick="switchTab(3)">Image Analysis</div>
             <div class="tab" onclick="switchTab(4)">Interactive Chat</div>
             <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
+            <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
          </div>
          <div class="content active-content">
             <div class="form-section">
@@ -337,7 +350,6 @@
                   <option value="Japanese">Japanese</option>
                   <option value="Arabic">Arabic</option>
                   <option value="Turkish">Turkish</option>
-                  <!-- Turkish added -->
                </select>
                <button type="button" onclick="checkTranslation()">Translate</button>
                <div class="output">
@@ -408,6 +420,17 @@ List any files, screenshots, or logs that are relevant.
                   <pre id="bugDescriptionOutputText"></pre>
                   <!-- Use <pre> tag here -->
                   <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
+               </div>
+            </div>
+         </div>
+         <div class="content">
+            <div class="form-section">
+               <label for="tcInput">Enter the code:</label>
+               <textarea id="tcInput" name="text" required placeholder="Paste your code here..."></textarea>
+               <button type="button" onclick="addTestCases()">Add Test Cases</button>
+               <div class="output">
+                  <p><strong>Generated Test Cases:</strong> <span id="tcOutput"></span></p>
+                  <button class="copy-button" onclick="copyToClipboard('tcOutput')">Copy</button>
                </div>
             </div>
          </div>
