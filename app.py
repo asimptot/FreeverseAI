@@ -142,6 +142,22 @@ def interactive_chat():
     except Exception as e:
         return jsonify({"error": f"Error during interactive chat: {str(e)}"}), 500
 
+@app.route("/add-testcases", methods=["POST"])
+def add_testcase():
+    input_text = request.form.get("text", "")
+    try:
+        prompt = "Add new test cases for the following code to cover all branches. Provide them as TC-1, TC-2, etc."
+        combined_input = f"{prompt} {input_text}"
+
+        response = client.chat.completions.create(
+            model=g4f.models.gpt_4,
+            messages=[{"role": "user", "content": combined_input}],
+        )
+
+        corrected_text = response.choices[0].message.content
+        return jsonify({"test_cases": corrected_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
