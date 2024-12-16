@@ -1,400 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Integration</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: flex-start;
-            min-height: 100vh;
-            width: 100vw;
-        }
-
-        .container {
-            display: flex;
-            width: 100%;
-            padding: 20px;
-        }
-
-        .tabs {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            margin-bottom: 20px;
-            border-right: 2px solid #ddd;
-            width: 200px;
-            padding: 10px 0;
-        }
-
-        .tab {
-            padding: 15px 10px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-            text-align: left;
-            width: 100%;
-        }
-
-        .tab:hover {
-            background-color: #f1f1f1;
-        }
-
-        .active-tab {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .content {
-            display: none; /* Default state is hidden */
-            flex: 1;
-            margin-left: 20px;
-        }
-
-        .active-content {
-            display: block; /* Only the active content is visible */
-        }
-
-        /* Additional form styling */
-        .form-section {
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
-        label {
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 8px;
-        }
-
-        input, select, textarea {
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            transition: border-color 0.3s;
-            width: 100%;
-            height: auto;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 250px; /* Ensures multiple lines are visible */
-            resize: vertical; /* Allows users to resize vertically */
-        }
-
-        button {
-            padding: 12px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            width: auto; /* Shrinks buttons to fit their content */
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .output {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f1f1f1;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            width: 100%;
-        }
-
-        .copy-button {
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-
-        .copy-button:hover {
-            background-color: #45a049;
-        }
-
-        .separator {
-            margin: 30px 0;
-            border-top: 2px solid #ddd;
-        }
-
-        .chat-box {
-			width: 100%;
-			height: 150px;
-			border: 1px solid #ddd;
-			padding: 10px;
-			font-size: 16px;
-			background-color: #f9f9f9;
-			color: #333;
-			border-radius: 4px;
-			resize: vertical;
-			overflow-y: auto;
-			white-space: pre-wrap;
-			text-align: left;
-			font-family: 'Roboto', sans-serif;
-			word-wrap: break-word;
-		}
-
-
-		/* Bold and dark color for You and Bot */
-		.chat-box .user,
-		.chat-box .bot {
-			font-weight: bold;
-			color: #2c2c2c; /* Dark gray color */
-		}
-
-
-    </style>
-    <script>
-        let activeTab = 0;
-
-        function switchTab(tabIndex) {
-            document.querySelectorAll('.tab').forEach((tab, index) => {
-                tab.classList.remove('active-tab');
-                if (index === tabIndex) {
-                    tab.classList.add('active-tab');
-                }
-            });
-
-            document.querySelectorAll('.content').forEach((content, index) => {
-                content.classList.remove('active-content');
-                if (index === tabIndex) {
-                    content.classList.add('active-content');
-                }
-            });
-        }
-
-        async function checkGrammar() {
-            const inputText = document.getElementById("grammarInput").value;
-            const response = await fetch("/check-grammar", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({ text: inputText }),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById("grammarOutput").innerText = data.corrected_text || "Error";
-            } else {
-                document.getElementById("grammarOutput").innerText = "An error occurred.";
-            }
-        }
-
-        async function checkTranslation() {
-            const inputText = document.getElementById("translationInput").value;
-            const targetLanguage = document.getElementById("languageInput").value;
-            const response = await fetch("/translate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({ text: inputText, language: targetLanguage }),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById("translationOutput").innerText = data.translated_text || "Error";
-            } else {
-                document.getElementById("translationOutput").innerText = "An error occurred.";
-            }
-        }
-
-        async function generateImage() {
-            const inputText = document.getElementById("imageInput").value;
-            const response = await fetch("/generate-image", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({ prompt: inputText }),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById("imageOutput").innerHTML = `<img src="${data.image_url}" alt="Generated Image" style="width:100%;"/>`;
-            } else {
-                document.getElementById("imageOutput").innerText = "An error occurred.";
-            }
-        }
-
-        async function analyzeImage() {
-            const formData = new FormData();
-            const fileInput = document.getElementById("imageFileInput");
-            formData.append("image", fileInput.files[0]);
-            const response = await fetch("/analyze-image", {
-                method: "POST",
-                body: formData,
-            });
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById("imageAnalysisOutput").innerText = data.analysis || "Error";
-            } else {
-                document.getElementById("imageAnalysisOutput").innerText = "An error occurred.";
-            }
-        }
-
-        async function startChat() {
-		const userInput = document.getElementById("chatInput").value;
-		const response = await fetch("/interactive-chat", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
-			},
-			body: new URLSearchParams({ message: userInput }),
-		});
-		const chatBox = document.getElementById("chatBox");
-		if (response.ok) {
-			const data = await response.json();
-			chatBox.innerHTML += `<strong>You:</strong> ${userInput}<br><strong>Bot:</strong> ${data.response}<br><br>`;
-			document.getElementById("chatInput").value = ''; // Clear input field
-		} else {
-			chatBox.innerHTML += "An error occurred. Please try again.<br><br>";
-		}
-	}
-
-
-
-
-
-        async function improveBugDescription() {
-    const descriptionText = document.getElementById("bugDescriptionInput").value;
-    const response = await fetch("/bug-control", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ description: descriptionText }),
-    });
-    if (response.ok) {
-        const data = await response.json();
-        const formattedText = formatBugDescription(data.bug_description);
-        document.getElementById("bugDescriptionOutputText").innerText = formattedText || "Error";
-    } else {
-        document.getElementById("bugDescriptionOutputText").innerText = "An error occurred.";
-    }
-}
-
-
-        function formatBugDescription(description) {
-            return description.replace(/\*\*(.*?)\*\*/g, '$1'); // Example of formatting
-        }
-
-        window.onload = () => switchTab(4); // Default to first tab
-    </script>
-</head>
-<body>
-    <div class="container">
-        <div class="tabs">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Flask Integration</title>
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+      <style>
+         * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         }
+         body {
+         font-family: 'Roboto', sans-serif;
+         background-color: #f4f4f9;
+         color: #333;
+         margin: 0;
+         padding: 0;
+         display: flex;
+         justify-content: flex-start;
+         min-height: 100vh;
+         width: 100vw;
+         }
+         .container {
+         display: flex;
+         width: 100%;
+         padding: 20px;
+         }
+         .tabs {
+         display: flex;
+         flex-direction: column;
+         justify-content: flex-start;
+         margin-bottom: 20px;
+         border-right: 2px solid #ddd;
+         width: 200px;
+         padding: 10px 0;
+         }
+         .tab {
+         padding: 15px 10px;
+         cursor: pointer;
+         font-weight: 500;
+         transition: background-color 0.3s;
+         text-align: left;
+         width: 100%;
+         }
+         .tab:hover {
+         background-color: #f1f1f1;
+         }
+         .active-tab {
+         background-color: #4CAF50;
+         color: white;
+         }
+         .content {
+         display: none; /* Default state is hidden */
+         flex: 1;
+         margin-left: 20px;
+         }
+         .active-content {
+         display: block; /* Only the active content is visible */
+         }
+         /* Additional form styling */
+         .form-section {
+         margin-bottom: 30px;
+         display: flex;
+         flex-direction: column;
+         width: 100%;
+         }
+         label {
+         font-weight: 500;
+         color: #555;
+         margin-bottom: 8px;
+         }
+         input, select, textarea {
+         padding: 12px;
+         font-size: 16px;
+         border: 1px solid #ddd;
+         border-radius: 4px;
+         transition: border-color 0.3s;
+         width: 100%;
+         height: auto;
+         box-sizing: border-box;
+         }
+         textarea {
+         min-height: 250px; /* Ensures multiple lines are visible */
+         resize: vertical; /* Allows users to resize vertically */
+         }
+         button {
+         padding: 12px 20px;
+         background-color: #4CAF50;
+         color: white;
+         border: none;
+         border-radius: 4px;
+         font-size: 16px;
+         cursor: pointer;
+         width: auto; /* Shrinks buttons to fit their content */
+         transition: background-color 0.3s;
+         }
+         button:hover {
+         background-color: #45a049;
+         }
+         .output {
+         margin-top: 20px;
+         padding: 15px;
+         background-color: #f1f1f1;
+         border: 1px solid #ddd;
+         border-radius: 4px;
+         font-size: 16px;
+         color: #333;
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         flex-wrap: wrap;
+         width: 100%;
+         }
+         .copy-button {
+         padding: 8px 15px;
+         background-color: #4CAF50;
+         color: white;
+         border: none;
+         border-radius: 4px;
+         cursor: pointer;
+         font-size: 14px;
+         transition: background-color 0.3s;
+         }
+         .copy-button:hover {
+         background-color: #45a049;
+         }
+         .separator {
+         margin: 30px 0;
+         border-top: 2px solid #ddd;
+         }
+         .chat-box {
+         width: 100%;
+         height: 150px;
+         border: 1px solid #ddd;
+         padding: 10px;
+         font-size: 16px;
+         background-color: #f9f9f9;
+         color: #333;
+         border-radius: 4px;
+         resize: vertical;
+         overflow-y: auto;
+         white-space: pre-wrap;
+         text-align: left;
+         font-family: 'Roboto', sans-serif;
+         word-wrap: break-word;
+         }
+         /* Bold and dark color for You and Bot */
+         .chat-box .user,
+         .chat-box .bot {
+         font-weight: bold;
+         color: #2c2c2c; /* Dark gray color */
+         }
+      </style>
+      <script>
+         let activeTab = 0;
+         
+         function switchTab(tabIndex) {
+             document.querySelectorAll('.tab').forEach((tab, index) => {
+                 tab.classList.remove('active-tab');
+                 if (index === tabIndex) {
+                     tab.classList.add('active-tab');
+                 }
+             });
+         
+             document.querySelectorAll('.content').forEach((content, index) => {
+                 content.classList.remove('active-content');
+                 if (index === tabIndex) {
+                     content.classList.add('active-content');
+                 }
+             });
+         }
+         
+         function copyToClipboard(elementId) {
+         const text = document.getElementById(elementId).innerText;
+         navigator.clipboard.writeText(text).then(() => {
+         alert('Copied to clipboard!');
+         }).catch(err => {
+         alert('Failed to copy: ' + err);
+         });
+         }
+         
+         async function checkGrammar() {
+             const inputText = document.getElementById("grammarInput").value;
+             const response = await fetch("/check-grammar", {
+                 method: "POST",
+                 headers: {
+                     "Content-Type": "application/x-www-form-urlencoded",
+                 },
+                 body: new URLSearchParams({ text: inputText }),
+             });
+             if (response.ok) {
+                 const data = await response.json();
+                 document.getElementById("grammarOutput").innerText = data.corrected_text || "Error";
+             } else {
+                 document.getElementById("grammarOutput").innerText = "An error occurred.";
+             }
+         }
+         
+         async function checkTranslation() {
+             const inputText = document.getElementById("translationInput").value;
+             const targetLanguage = document.getElementById("languageInput").value;
+             const response = await fetch("/translate", {
+                 method: "POST",
+                 headers: {
+                     "Content-Type": "application/x-www-form-urlencoded",
+                 },
+                 body: new URLSearchParams({ text: inputText, language: targetLanguage }),
+             });
+             if (response.ok) {
+                 const data = await response.json();
+                 document.getElementById("translationOutput").innerText = data.translated_text || "Error";
+             } else {
+                 document.getElementById("translationOutput").innerText = "An error occurred.";
+             }
+         }
+         
+         async function generateImage() {
+             const inputText = document.getElementById("imageInput").value;
+             const response = await fetch("/generate-image", {
+                 method: "POST",
+                 headers: {
+                     "Content-Type": "application/x-www-form-urlencoded",
+                 },
+                 body: new URLSearchParams({ prompt: inputText }),
+             });
+             if (response.ok) {
+                 const data = await response.json();
+                 document.getElementById("imageOutput").innerHTML = `<img src="${data.image_url}" alt="Generated Image" style="width:100%;"/>`;
+             } else {
+                 document.getElementById("imageOutput").innerText = "An error occurred.";
+             }
+         }
+         
+         async function analyzeImage() {
+             const formData = new FormData();
+             const fileInput = document.getElementById("imageFileInput");
+             formData.append("image", fileInput.files[0]);
+             const response = await fetch("/analyze-image", {
+                 method: "POST",
+                 body: formData,
+             });
+             if (response.ok) {
+                 const data = await response.json();
+                 document.getElementById("imageAnalysisOutput").innerText = data.analysis || "Error";
+             } else {
+                 document.getElementById("imageAnalysisOutput").innerText = "An error occurred.";
+             }
+         }
+         
+         async function startChat() {
+         const userInput = document.getElementById("chatInput").value;
+         const response = await fetch("/interactive-chat", {
+         method: "POST",
+         headers: {
+         "Content-Type": "application/x-www-form-urlencoded",
+         },
+         body: new URLSearchParams({ message: userInput }),
+         });
+         const chatBox = document.getElementById("chatBox");
+         if (response.ok) {
+         const data = await response.json();
+         chatBox.innerHTML += `<strong>You:</strong> ${userInput}<br><strong>Bot:</strong> ${data.response}<br><br>`;
+         document.getElementById("chatInput").value = ''; // Clear input field
+         } else {
+         chatBox.innerHTML += "An error occurred. Please try again.<br><br>";
+         }
+         }
+         
+         
+         
+         
+         
+         async function improveBugDescription() {
+         const descriptionText = document.getElementById("bugDescriptionInput").value;
+         const response = await fetch("/bug-control", {
+         method: "POST",
+         headers: {
+             "Content-Type": "application/x-www-form-urlencoded",
+         },
+         body: new URLSearchParams({ description: descriptionText }),
+         });
+         if (response.ok) {
+         const data = await response.json();
+         const formattedText = formatBugDescription(data.bug_description);
+         document.getElementById("bugDescriptionOutputText").innerText = formattedText || "Error";
+         } else {
+         document.getElementById("bugDescriptionOutputText").innerText = "An error occurred.";
+         }
+         }
+         
+         
+         function formatBugDescription(description) {
+             return description.replace(/\*\*(.*?)\*\*/g, '$1'); // Example of formatting
+         }
+         
+         window.onload = () => switchTab(4); // Default to first tab
+      </script>
+   </head>
+   <body>
+      <div class="container">
+         <div class="tabs">
             <div class="tab active-tab" onclick="switchTab(0)">Grammar Check</div>
             <div class="tab" onclick="switchTab(1)">Translation</div>
             <div class="tab" onclick="switchTab(2)">Image Generation</div>
             <div class="tab" onclick="switchTab(3)">Image Analysis</div>
             <div class="tab" onclick="switchTab(4)">Interactive Chat</div>
             <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
-        </div>
-
-        <div class="content active-content">
+         </div>
+         <div class="content active-content">
             <div class="form-section">
-                <label for="grammarInput">Enter text for grammar check:</label>
-                <textarea id="grammarInput" name="text" required placeholder="Type your text here..."></textarea>
-                <button type="button" onclick="checkGrammar()">Check Grammar</button>
-                <div class="output">
-                    <p><strong>Corrected Grammar:</strong> <span id="grammarOutput"></span></p>
-                    <button class="copy-button" onclick="copyToClipboard('grammarOutput')">Copy</button>
-                </div>
+               <label for="grammarInput">Enter text for grammar check:</label>
+               <textarea id="grammarInput" name="text" required placeholder="Type your text here..."></textarea>
+               <button type="button" onclick="checkGrammar()">Check Grammar</button>
+               <div class="output">
+                  <p><strong>Corrected Grammar:</strong> <span id="grammarOutput"></span></p>
+                  <button class="copy-button" onclick="copyToClipboard('grammarOutput')">Copy</button>
+               </div>
             </div>
-        </div>
-
-        <div class="content">
-			<div class="form-section">
-				<label for="translationInput">Enter text for translation:</label>
-				<textarea id="translationInput" name="text" required placeholder="Type your text here..."></textarea>
-				<label for="languageInput">Choose target language:</label>
-				<select id="languageInput">
-					<option value="English" selected>English</option>
-					<option value="Spanish">Spanish</option>
-					<option value="French">French</option>
-					<option value="German">German</option>
-					<option value="Italian">Italian</option>
-					<option value="Dutch">Dutch</option>
-					<option value="Portuguese">Portuguese</option>
-					<option value="Russian">Russian</option>
-					<option value="Chinese">Chinese</option>
-					<option value="Japanese">Japanese</option>
-					<option value="Arabic">Arabic</option>
-					<option value="Turkish">Turkish</option> <!-- Turkish added -->
-				</select>
-				<button type="button" onclick="checkTranslation()">Translate</button>
-				<div class="output">
-					<p><strong>Translation:</strong> <span id="translationOutput"></span></p>
-					<button class="copy-button" onclick="copyToClipboard('translationOutput')">Copy</button>
-				</div>
-			</div>
-		</div>
-
-        <div class="content">
+         </div>
+         <div class="content">
             <div class="form-section">
-                <label for="imageInput">Enter text for image generation:</label>
-                <textarea id="imageInput" name="prompt" required placeholder="Describe the image you want..."></textarea>
-                <button type="button" onclick="generateImage()">Generate Image</button>
-                <div id="imageOutput"></div>
+               <label for="translationInput">Enter text for translation:</label>
+               <textarea id="translationInput" name="text" required placeholder="Type your text here..."></textarea>
+               <label for="languageInput">Choose target language:</label>
+               <select id="languageInput">
+                  <option value="English" selected>English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Dutch">Dutch</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="Russian">Russian</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="Turkish">Turkish</option>
+                  <!-- Turkish added -->
+               </select>
+               <button type="button" onclick="checkTranslation()">Translate</button>
+               <div class="output">
+                  <p><strong>Translation:</strong> <span id="translationOutput"></span></p>
+                  <button class="copy-button" onclick="copyToClipboard('translationOutput')">Copy</button>
+               </div>
             </div>
-        </div>
-
-        <div class="content">
+         </div>
+         <div class="content">
             <div class="form-section">
-                <label for="imageFileInput">Upload an image for analysis:</label>
-                <input type="file" id="imageFileInput" accept="image/*">
-                <button type="button" onclick="analyzeImage()">Analyze Image</button>
-                <div class="output">
-                    <p><strong>Analysis:</strong> <span id="imageAnalysisOutput"></span></p>
-                </div>
+               <label for="imageInput">Enter text for image generation:</label>
+               <textarea id="imageInput" name="prompt" required placeholder="Describe the image you want..."></textarea>
+               <button type="button" onclick="generateImage()">Generate Image</button>
+               <div id="imageOutput"></div>
             </div>
-        </div>
-
-        <div class="content">
+         </div>
+         <div class="content">
             <div class="form-section">
-                <label for="chatInput">Enter message for the assistant:</label>
-                <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
-                <button type="button" onclick="startChat()">Start Chat</button>
-                <div id="chatBox" class="chat-box" readonly></div>
+               <label for="imageFileInput">Upload an image for analysis:</label>
+               <input type="file" id="imageFileInput" accept="image/*">
+               <button type="button" onclick="analyzeImage()">Analyze Image</button>
+               <div class="output">
+                  <p><strong>Analysis:</strong> <span id="imageAnalysisOutput"></span></p>
+                  <button class="copy-button" onclick="copyToClipboard('imageAnalysisOutput')">Copy</button>
+               </div>
             </div>
-        </div>
-
-        <div class="content">
-    <div class="form-section">
-        <label for="bugDescriptionInput">Enter bug description:</label>
-        <textarea id="bugDescriptionInput" name="description" required>
+         </div>
+         <div class="content">
+            <div class="form-section">
+               <label for="chatInput">Enter message for the assistant:</label>
+               <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
+               <button type="button" onclick="startChat()">Start Chat</button>
+               <div id="chatBox" class="chat-box" readonly></div>
+            </div>
+         </div>
+         <div class="content">
+            <div class="form-section">
+               <label for="bugDescriptionInput">Enter bug description:</label>
+               <textarea id="bugDescriptionInput" name="description" required>
 Description:
 Provide a brief summary of the bug, including its impact and any relevant context.
 
@@ -421,17 +403,14 @@ Rate the reproducibility on a scale of 1/5 to 5/5, where 1 is rarely reproducibl
 Attachments:
 List any files, screenshots, or logs that are relevant.
         </textarea>
-        <button type="button" onclick="improveBugDescription()">Improve Description</button>
-        <div id="bugDescriptionOutput" class="output">
-            <pre id="bugDescriptionOutputText"></pre> <!-- Use <pre> tag here -->
-        </div>
-    </div>
-</div>
-
-
-
-
-
-    </div>
-</body>
+               <button type="button" onclick="improveBugDescription()">Improve Description</button>
+               <div id="bugDescriptionOutput" class="output">
+                  <pre id="bugDescriptionOutputText"></pre>
+                  <!-- Use <pre> tag here -->
+                  <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
+               </div>
+            </div>
+         </div>
+      </div>
+   </body>
 </html>
