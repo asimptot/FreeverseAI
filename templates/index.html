@@ -323,6 +323,26 @@
 				document.getElementById("htrOutput").innerText = "An error occurred.";
 			}
 		}
+		
+		async function processRequirementsAndCode() {
+			const requirements = document.getElementById("requirementsInput").value;
+			const code = document.getElementById("codeInput").value;
+			
+			const response = await fetch("/process-requirements-and-code", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: new URLSearchParams({ requirements: requirements, code: code }),
+			});
+			
+			if (response.ok) {
+				const data = await response.json();
+				document.getElementById("analysisOutput").innerText = data.analysis || "Error";
+			} else {
+				document.getElementById("analysisOutput").innerText = "An error occurred.";
+			}
+		}
          
          window.onload = () => switchTab(4);
       </script>
@@ -338,6 +358,7 @@
             <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
             <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
 			<div class="tab" onclick="switchTab(7)">How to Reply</div>
+			<div class="tab" onclick="switchTab(8)">Process Requirements and Code</div>
          </div>
          <div class="content active-content">
             <div class="form-section">
@@ -461,6 +482,21 @@ List any files, screenshots, or logs that are relevant.
                   <button class="copy-button" onclick="copyToClipboard('htrOutput')">Copy</button>
                </div>
             </div>
+		</div>
+		<div class="content">
+			<div class="form-section">
+				<label for="requirementsInput">Enter Requirements:</label>
+				<textarea id="requirementsInput" name="requirements" required placeholder="Type your requirements here..."></textarea>
+				
+				<label for="codeInput">Enter Code:</label>
+				<textarea id="codeInput" name="code" required placeholder="Paste your code here..."></textarea>
+				
+				<button type="button" onclick="processRequirementsAndCode()">Analyze</button>
+				<div class="output">
+					<p><strong>Analysis Result:</strong> <span id="analysisOutput"></span></p>
+					<button class="copy-button" onclick="copyToClipboard('analysisOutput')">Copy</button>
+				</div>
+			</div>
 		</div>
       </div>
    </body>
