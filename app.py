@@ -159,5 +159,22 @@ def add_testcase():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/how-to-reply", methods=["POST"])
+def how_to_reply():
+    input_text = request.form.get("text", "")
+    try:
+        prompt = "Reply to the following sentence and return only the answer. "
+        combined_input = f"{prompt} {input_text}"
+
+        response = client.chat.completions.create(
+            model=g4f.models.gpt_4,
+            messages=[{"role": "user", "content": combined_input}],
+        )
+
+        corrected_text = response.choices[0].message.content
+        return jsonify({"Reply": corrected_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
