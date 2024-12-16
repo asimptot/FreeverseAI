@@ -306,6 +306,23 @@
          document.getElementById("tcOutput").innerText = "An error occurred.";
          }
          }
+		 
+		 async function howToReply() {
+			const inputText = document.getElementById("htrInput").value;
+			const response = await fetch("/how-to-reply", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: new URLSearchParams({ text: inputText }),
+			});
+			if (response.ok) {
+				const data = await response.json();
+				document.getElementById("htrOutput").innerText = data.Reply || "Error"; // Burayı güncelledik
+			} else {
+				document.getElementById("htrOutput").innerText = "An error occurred.";
+			}
+		}
          
          window.onload = () => switchTab(4);
       </script>
@@ -320,6 +337,7 @@
             <div class="tab" onclick="switchTab(4)">Interactive Chat</div>
             <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
             <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
+			<div class="tab" onclick="switchTab(7)">How to Reply</div>
          </div>
          <div class="content active-content">
             <div class="form-section">
@@ -418,7 +436,6 @@ List any files, screenshots, or logs that are relevant.
                <button type="button" onclick="improveBugDescription()">Improve Description</button>
                <div id="bugDescriptionOutput" class="output">
                   <pre id="bugDescriptionOutputText"></pre>
-                  <!-- Use <pre> tag here -->
                   <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
                </div>
             </div>
@@ -433,7 +450,18 @@ List any files, screenshots, or logs that are relevant.
                   <button class="copy-button" onclick="copyToClipboard('tcOutput')">Copy</button>
                </div>
             </div>
-         </div>
+		</div>
+		<div class="content">
+			<div class="form-section">
+               <label for="htrInput">Enter the message:</label>
+               <textarea id="htrInput" name="text" required placeholder="Input your message here..."></textarea>
+               <button type="button" onclick="howToReply()">How to Reply</button>
+               <div class="output">
+                  <p><strong>Generated Message:</strong> <span id="htrOutput"></span></p>
+                  <button class="copy-button" onclick="copyToClipboard('htrOutput')">Copy</button>
+               </div>
+            </div>
+		</div>
       </div>
    </body>
 </html>
