@@ -176,5 +176,28 @@ def how_to_reply():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/process-requirements-and-code", methods=["POST"])
+def process_requirements_and_code():
+    requirements = request.form.get("requirements", "")
+    code = request.form.get("code", "")
+
+    try:
+        predefined_instruction = (
+            "Analyze the requirements and code below. Validate if the requirements are fulfilled by the code "
+            "and provide suggestions for improvement or missing elements. Return only the answer. "
+        )
+        combined_input = f"{predefined_instruction}\n\nRequirements:\n{requirements}\n\nCode:\n{code}"
+
+        response = client.chat.completions.create(
+            model=g4f.models.gpt_4,
+            messages=[{"role": "user", "content": combined_input}],
+        )
+
+        analysis_result = response.choices[0].message.content
+        return jsonify({"analysis": analysis_result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
