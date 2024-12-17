@@ -131,10 +131,25 @@ def interactive_chat():
 
     try:
         messages.append({"role": "user", "content": user_input})
-        response = client.chat.completions.create(
-            messages=messages,
-            model=g4f.models.default,
-        )
+
+        if "image" in request.files:
+            image_file = request.files["image"]
+            image_path = os.path.join("temp", image_file.filename)
+            image_file.save(image_path)
+
+            with open(image_path, "rb") as file:
+                response = client.chat.completions.create(
+                    messages=messages,
+                    model=g4f.models.gemini_pro,
+                    image=file,
+                )
+
+            os.remove(image_path)
+        else:
+            response = client.chat.completions.create(
+                messages=messages,
+                model=g4f.models.gpt_4,
+            )
 
         gpt_response = response.choices[0].message.content
         messages.append({"role": "assistant", "content": gpt_response})
