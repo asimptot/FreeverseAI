@@ -65,7 +65,7 @@ def bug_control():
 
     try:
         response = client.chat.completions.create(
-            model=g4f.models.gpt_4,
+            model=g4f.models.gpt_4o,
             messages=[{"role": "user", "content": combined_input}],
         )
 
