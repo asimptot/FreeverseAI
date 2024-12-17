@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify
 from g4f.client import Client
-import g4f
-import os
+import g4f, os, warnings
+warnings.filterwarnings("ignore")
 
 app = Flask(__name__)
 client = Client()
@@ -132,19 +132,40 @@ def interactive_chat():
     try:
         messages.append({"role": "user", "content": user_input})
 
-        if "image" in request.files:
-            image_file = request.files["image"]
-            image_path = os.path.join("temp", image_file.filename)
-            image_file.save(image_path)
+        if "file" in request.files:
+            uploaded_file = request.files["file"]
+            file_extension = uploaded_file.filename.split('.')[-1].lower()
 
-            with open(image_path, "rb") as file:
-                response = client.chat.completions.create(
-                    messages=messages,
-                    model=g4f.models.gemini_pro,
-                    image=file,
-                )
+            if file_extension in ['jpg', 'jpeg', 'png', 'gif']:
+                image_path = os.path.join("temp", uploaded_file.filename)
+                uploaded_file.save(image_path)
 
-            os.remove(image_path)
+                with open(image_path, "rb") as file:
+                    response = client.chat.completions.create(
+                        messages=messages,
+                        model=g4f.models.gpt_4,
+                        image=file,
+                    )
+
+                os.remove(image_path)
+
+            elif file_extension == 'xml':
+                xml_path = os.path.join("temp", uploaded_file.filename)
+                uploaded_file.save(xml_path)
+
+                with open(xml_path, "r") as file:
+                    xml_content = file.read()
+                    messages.append({"role": "user", "content": xml_content})
+
+                    response = client.chat.completions.create(
+                        messages=messages,
+                        model=g4f.models.gpt_4,
+                    )
+
+                os.remove(xml_path)
+
+            else:
+                return jsonify({"error": "Unsupported file type."}), 400
         else:
             response = client.chat.completions.create(
                 messages=messages,
