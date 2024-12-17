@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Awesome AI</title>
+        <title>Asim AI</title>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
         <style>
             * {
@@ -52,14 +52,14 @@
                 color: white;
             }
             .content {
-                display: none; /* Default state is hidden */
+                display: none;
                 flex: 1;
                 margin-left: 20px;
             }
             .active-content {
-                display: block; /* Only the active content is visible */
+                display: block;
             }
-            /* Additional form styling */
+
             .form-section {
                 margin-bottom: 30px;
                 display: flex;
@@ -84,8 +84,8 @@
                 box-sizing: border-box;
             }
             textarea {
-                min-height: 250px; /* Ensures multiple lines are visible */
-                resize: vertical; /* Allows users to resize vertically */
+                min-height: 250px;
+                resize: vertical;
             }
             button {
                 padding: 12px 20px;
@@ -95,7 +95,7 @@
                 border-radius: 4px;
                 font-size: 16px;
                 cursor: pointer;
-                width: auto; /* Shrinks buttons to fit their content */
+                width: auto;
                 transition: background-color 0.3s;
             }
             button:hover {
@@ -134,7 +134,7 @@
             }
             .chat-box {
                 width: 100%;
-                height: 1200px; /* Increased height */
+                height: 1200px;
                 border: 1px solid #ddd;
                 padding: 10px;
                 font-size: 16px;
@@ -148,36 +148,36 @@
                 font-family: "Roboto", sans-serif;
                 word-wrap: break-word;
             }
-            /* Bold and dark color for You and Bot */
+
             .chat-box .user,
             .chat-box .bot {
                 font-weight: bold;
-                color: #2c2c2c; /* Dark gray color */
+                color: #2c2c2c;
             }
             @media (max-width: 600px) {
                 .container {
-                    flex-direction: column; /* Değişiklik: Dikey hizalama */
-                    padding: 10px; /* Değişiklik: Padding azaltıldı */
+                    flex-direction: column;
+                    padding: 10px;
                 }
                 .tabs {
-                    flex-direction: column; /* Değişiklik: Tab'ların dikey hizalanması */
-                    border-right: none; /* Değişiklik: Sağ kenar kaldırıldı */
-                    border-bottom: 2px solid #ddd; /* Değişiklik: Alt kenar eklendi */
-                    width: 100%; /* Değişiklik: Genişlik %100 yapıldı */
+                    flex-direction: column;
+                    border-right: none;
+                    border-bottom: 2px solid #ddd;
+                    width: 100%;
                 }
                 .tab {
-                    width: 100%; /* Değişiklik: Tab'ların genişliğini %100 yap */
-                    text-align: center; /* Değişiklik: Tab'ları ortala */
+                    width: 100%;
+                    text-align: center;
                 }
                 .content {
-                    margin-left: 0; /* Değişiklik: Mobilde soldan boşluk kaldırıldı */
-                    margin-top: 10px; /* Değişiklik: Üstten boşluk eklendi */
+                    margin-left: 0;
+                    margin-top: 10px;
                 }
                 .chat-box {
-                    height: 300px; /* Değişiklik: Mobilde yükseklik azaltıldı */
+                    height: 300px;
                 }
                 textarea {
-                    min-height: 150px; /* Değişiklik: Minimum yükseklik mobil için azaltıldı */
+                    min-height: 150px;
                 }
             }
         </style>
@@ -282,12 +282,12 @@
 
             async function startChat() {
                 const userInput = document.getElementById("chatInput").value;
-                const fileInput = document.getElementById("chatImageInput");
+                const fileInput = document.getElementById("chatFileInput");
                 const formData = new FormData();
 
                 formData.append("message", userInput);
                 if (fileInput.files.length > 0) {
-                    formData.append("image", fileInput.files[0]);
+                    formData.append("file", fileInput.files[0]);
                 }
 
                 const response = await fetch("/interactive-chat", {
@@ -300,29 +300,46 @@
                     const data = await response.json();
                     chatBox.innerHTML += `<strong>You:</strong> ${userInput}<br><strong>Bot:</strong> ${data.response}<br><br>`;
                     document.getElementById("chatInput").value = "";
-                    fileInput.value = ""; // Clear the file input
+                    fileInput.value = "";
                 } else {
                     chatBox.innerHTML += "An error occurred. Please try again.<br><br>";
                 }
             }
 
             async function improveBugDescription() {
-                const descriptionText = document.getElementById("bugDescriptionInput").value;
-                const response = await fetch("/bug-control", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({ description: descriptionText }),
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const formattedText = formatBugDescription(data.bug_description);
-                    document.getElementById("bugDescriptionOutputText").innerText = formattedText || "Error";
-                } else {
-                    document.getElementById("bugDescriptionOutputText").innerText = "An error occurred.";
-                }
-            }
+				const descriptionText = document.getElementById("bugDescriptionInput").value;
+				const response = await fetch("/bug-control", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams({ description: descriptionText }),
+				});
+				if (response.ok) {
+					const data = await response.json();
+					const formattedText = formatBugDescription(data.bug_description);
+					
+					const boldedText = formattedText
+						.replace(/(Description:)/g, '<strong>$1</strong><br>')
+						.replace(/(Prerequisites:)/g, '<strong>$1</strong><br>')
+						.replace(/(Steps to Reproduce:)/g, '<strong>$1</strong><br>')
+						.replace(/(Expected Result:)/g, '<strong>$1</strong><br>')
+						.replace(/(Actual Result:)/g, '<strong>$1</strong><br>')
+						.replace(/(Recovery State:)/g, '<strong>$1</strong><br>')
+						.replace(/(Reproducibility Rate:)/g, '<strong>$1</strong><br>')
+						.replace(/(Attachments:)/g, '<strong>$1</strong><br>');
+
+					const descriptionStartIndex = boldedText.indexOf('<strong>Description:</strong>');
+					const descriptionPart = boldedText.substring(descriptionStartIndex);
+					const titleAndPriorityPart = boldedText.substring(0, descriptionStartIndex);
+
+					document.getElementById("bugDescriptionOutputText").innerHTML = titleAndPriorityPart;
+					document.getElementById("descriptionOutputText").innerHTML = descriptionPart;
+				} else {
+					document.getElementById("bugDescriptionOutputText").innerText = "An error occurred.";
+					document.getElementById("descriptionOutputText").innerText = "";
+				}
+			}
 
             function formatBugDescription(description) {
                 return description.replace(/\*\*(.*?)\*\*/g, "$1");
@@ -356,7 +373,7 @@
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById("htrOutput").innerText = data.Reply || "Error"; // Burayı güncelledik
+                    document.getElementById("htrOutput").innerText = data.Reply || "Error";
                 } else {
                     document.getElementById("htrOutput").innerText = "An error occurred.";
                 }
@@ -459,9 +476,8 @@
                     <label for="chatInput">Enter message for the assistant:</label>
                     <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
 
-                    <!-- Yeni dosya yükleme alanı ekliyoruz -->
-                    <label for="chatImageInput">Upload an image (optional):</label>
-                    <input type="file" id="chatImageInput" accept="image/*" />
+                    <label for="chatFileInput">Upload an image or XML file (optional):</label>
+                    <input type="file" id="chatFileInput" accept=".xml, image/*" />
 
                     <button type="button" onclick="startChat()">Start Chat</button>
                     <div id="chatBox" class="chat-box" readonly></div>
@@ -500,9 +516,13 @@ List any files, screenshots, or logs that are relevant.
                     </textarea>
                     <button type="button" onclick="improveBugDescription()">Improve Description</button>
                     <div id="bugDescriptionOutput" class="output">
-                        <pre id="bugDescriptionOutputText"></pre>
-                        <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
-                    </div>
+						<pre id="bugDescriptionOutputText"></pre>
+						<button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
+					</div>
+					<div id="descriptionOutput" class="output">
+						<pre id="descriptionOutputText"></pre>
+						<button class="copy-button" onclick="copyToClipboard('descriptionOutputText')">Copy</button>
+					</div>
                 </div>
             </div>
             <div class="content">
