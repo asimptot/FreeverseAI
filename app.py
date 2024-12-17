@@ -21,7 +21,7 @@ def check_grammar():
         combined_input = f"{prompt} {input_text}"
 
         response = client.chat.completions.create(
-            model=g4f.models.gpt_35_turbo,
+            model=g4f.models.gpt_4o_mini,
             messages=[{"role": "user", "content": combined_input}],
         )
 
