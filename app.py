@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from g4f.client import Client
 import g4f, os, warnings
+
 warnings.filterwarnings("ignore")
 
 app = Flask(__name__)
@@ -83,11 +84,12 @@ def generate_image():
         return jsonify({"error": "Prompt is required"}), 400
 
     try:
-        response = client.images.generate(
-            model="flux", prompt=user_prompt, response_format="url"
+        response = client.chat.completions.create(
+            model=g4f.models.dall_e_3,
+            messages=[{"role": "user", "content": user_prompt}],
         )
 
-        image_url = response.data[0].url
+        image_url = response.choices[0].message.content.strip()
         return jsonify({"image_url": image_url})
     except Exception as e:
         return jsonify({"error": f"Error generating image: {str(e)}"}), 500
@@ -134,9 +136,9 @@ def interactive_chat():
 
         if "file" in request.files:
             uploaded_file = request.files["file"]
-            file_extension = uploaded_file.filename.split('.')[-1].lower()
+            file_extension = uploaded_file.filename.split(".")[-1].lower()
 
-            if file_extension in ['jpg', 'jpeg', 'png', 'gif']:
+            if file_extension in ["jpg", "jpeg", "png", "gif"]:
                 image_path = os.path.join("temp", uploaded_file.filename)
                 uploaded_file.save(image_path)
 
@@ -149,7 +151,7 @@ def interactive_chat():
 
                 os.remove(image_path)
 
-            elif file_extension == 'xml':
+            elif file_extension == "xml":
                 xml_path = os.path.join("temp", uploaded_file.filename)
                 uploaded_file.save(xml_path)
 
@@ -178,6 +180,7 @@ def interactive_chat():
     except Exception as e:
         return jsonify({"error": f"Error during interactive chat: {str(e)}"}), 500
 
+
 @app.route("/add-testcases", methods=["POST"])
 def add_testcase():
     requirements_text = request.form.get("requirements", "")
@@ -186,10 +189,12 @@ def add_testcase():
         prompt = (
             "Analyze the requirements and code below. Add extensive happy flow and unhappy flow new test cases for the "
             "following code to cover all branches. Provide them as TC-1, TC-2, etc. in a table view. Please only share "
-            "Test Case ID, Description and Expected Outcome on the output table. Do not print any Spanish text. "
-            "Do not share besides that. "
+            "Test Case ID, Description and Expected Outcome on the output table. You don't have to limit test cases "
+            "with 10. Do not print any Spanish text. Do not share besides that. "
         )
-        combined_input = f"{prompt}\n\nRequirements:\n{requirements_text}\n\nCode:\n{input_text}"
+        combined_input = (
+            f"{prompt}\n\nRequirements:\n{requirements_text}\n\nCode:\n{input_text}"
+        )
 
         response = client.chat.completions.create(
             model=g4f.models.gpt_4,
@@ -200,6 +205,7 @@ def add_testcase():
         return jsonify({"test_cases": corrected_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/how-to-reply", methods=["POST"])
 def how_to_reply():
@@ -240,6 +246,7 @@ def process_requirements_and_code():
         return jsonify({"analysis": analysis_result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
