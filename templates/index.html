@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Asim AI</title>
+        <title>Awesome AI</title>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
         <style>
             * {
@@ -201,16 +201,15 @@
             }
 
             function copyToClipboard(elementId) {
-                const text = document.getElementById(elementId).innerText;
-                navigator.clipboard
-                    .writeText(text)
-                    .then(() => {
-                        alert("Copied to clipboard!");
-                    })
-                    .catch((err) => {
-                        alert("Failed to copy: " + err);
-                    });
-            }
+				const textToCopy = document.getElementById(elementId).innerText;
+				const tempTextArea = document.createElement("textarea");
+				tempTextArea.value = textToCopy;
+				document.body.appendChild(tempTextArea);
+				tempTextArea.select();
+				document.execCommand("copy");
+				document.body.removeChild(tempTextArea);
+				alert("Copied to clipboard!");
+			}
 
             async function checkGrammar() {
                 const inputText = document.getElementById("grammarInput").value;
@@ -346,21 +345,38 @@
             }
 
             async function addTestCases() {
-                const inputText = document.getElementById("tcInput").value;
-                const response = await fetch("/add-testcases", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({ text: inputText }),
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById("tcOutput").innerText = data.test_cases || "Error";
-                } else {
-                    document.getElementById("tcOutput").innerText = "An error occurred.";
-                }
-            }
+				const requirementsText = document.getElementById("requirementsForTCInput").value;
+				const inputText = document.getElementById("tcInput").value;
+				const response = await fetch("/add-testcases", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams({ requirements: requirementsText, text: inputText }),
+				});
+				if (response.ok) {
+					const data = await response.json();
+					const testCases = data.test_cases;
+					const testCasesBody = document.getElementById("testCasesBody");
+					testCasesBody.innerHTML = "";
+
+					const lines = testCases.split('\n');
+					lines.forEach(line => {
+						const columns = line.split('|').map(col => col.trim()).filter(col => col);
+						if (columns.length > 0) {
+							const row = document.createElement("tr");
+							columns.forEach(col => {
+								const cell = document.createElement("td");
+								cell.innerText = col;
+								row.appendChild(cell);
+							});
+							testCasesBody.appendChild(row);
+						}
+					});
+				} else {
+					document.getElementById("tcOutput").innerText = "An error occurred.";
+				}
+			}
 
             async function howToReply() {
                 const inputText = document.getElementById("htrInput").value;
@@ -526,16 +542,31 @@ List any files, screenshots, or logs that are relevant.
                 </div>
             </div>
             <div class="content">
-                <div class="form-section">
-                    <label for="tcInput">Enter the code:</label>
-                    <textarea id="tcInput" name="text" required placeholder="Paste your code here..."></textarea>
-                    <button type="button" onclick="addTestCases()">Add Test Cases</button>
-                    <div class="output">
-                        <p><strong>Generated Test Cases:</strong> <span id="tcOutput"></span></p>
-                        <button class="copy-button" onclick="copyToClipboard('tcOutput')">Copy</button>
-                    </div>
-                </div>
-            </div>
+				<div class="form-section">
+					<label for="requirementsForTCInput">Enter Requirements:</label>
+					<textarea id="requirementsForTCInput" name="requirements" required placeholder="Type your requirements here..."></textarea>
+
+					<label for="tcInput">Enter the code:</label>
+					<textarea id="tcInput" name="text" required placeholder="Paste your code here..."></textarea>
+					<button type="button" onclick="addTestCases()">Add Test Cases</button>
+					<div class="output">
+						<p><strong>Generated Test Cases:</strong></p>
+						<table id="testCasesTable" border="1">
+							<thead>
+								<tr>
+									<th>Test Case ID</th>
+									<th>Description</th>
+									<th>Expected Outcome</th>
+								</tr>
+							</thead>
+							<tbody id="testCasesBody">
+								<!-- Test case rows will be inserted here -->
+							</tbody>
+						</table>
+						<button class="copy-button" onclick="copyToClipboard('testCasesTable')">Copy</button>
+					</div>
+				</div>
+			</div>
             <div class="content">
                 <div class="form-section">
                     <label for="htrInput">Enter the message:</label>
