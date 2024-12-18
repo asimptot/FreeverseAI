@@ -180,10 +180,16 @@ def interactive_chat():
 
 @app.route("/add-testcases", methods=["POST"])
 def add_testcase():
+    requirements_text = request.form.get("requirements", "")
     input_text = request.form.get("text", "")
     try:
-        prompt = "Add new test cases for the following code to cover all branches. Provide them as TC-1, TC-2, etc."
-        combined_input = f"{prompt} {input_text}"
+        prompt = (
+            "Analyze the requirements and code below. Add extensive happy flow and unhappy flow new test cases for the "
+            "following code to cover all branches. Provide them as TC-1, TC-2, etc. in a table view. Please only share "
+            "Test Case ID, Description and Expected Outcome on the output table. Do not print any Spanish text. "
+            "Do not share besides that. "
+        )
+        combined_input = f"{prompt}\n\nRequirements:\n{requirements_text}\n\nCode:\n{input_text}"
 
         response = client.chat.completions.create(
             model=g4f.models.gpt_4,
