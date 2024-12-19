@@ -197,7 +197,7 @@ def add_testcase():
         )
 
         response = client.chat.completions.create(
-            model=g4f.models.gpt_4,
+            model=g4f.models.claude_3_5_sonnet,
             messages=[{"role": "user", "content": combined_input}],
         )
 
@@ -238,12 +238,38 @@ def process_requirements_and_code():
         combined_input = f"{predefined_instruction}\n\nRequirements:\n{requirements}\n\nCode:\n{code}"
 
         response = client.chat.completions.create(
-            model=g4f.models.gpt_4,
+            model=g4f.models.claude_3_5_sonnet,
             messages=[{"role": "user", "content": combined_input}],
         )
 
         analysis_result = response.choices[0].message.content
         return jsonify({"analysis": analysis_result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/recommend-cafe", methods=["POST"])
+def recommend_cafe():
+    zip_code_1 = request.form.get("zip_code_1", "")
+    zip_code_2 = request.form.get("zip_code_2", "")
+    country_1 = request.form.get("country_1", "")
+    country_2 = request.form.get("country_2", "")
+    venue_type = request.form.get("venue_type", "cafe")
+
+    try:
+        prompt = (
+            f"I will be meeting you between the postcodes from {country_1} {zip_code_1} and from {country_2} {zip_code_2}. "
+            f"Can you recommend me a {venue_type} for the meeting? Let it be a middle point. "
+            "Please just write the meeting city and the name of the venue."
+        )
+
+        response = client.chat.completions.create(
+            model=g4f.models.gpt_4,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        recommendation = response.choices[0].message.content
+        return jsonify({"recommendation": recommendation})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
