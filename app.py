@@ -41,10 +41,13 @@ def translate_text():
         return jsonify({"error": "No target language provided"}), 400
 
     try:
-        prompt = f"Translate the following sentence to {target_language}: {input_text}"
+        prompt = (
+            f"Translate the following sentence to {target_language}: {input_text}. Please do not remark your "
+            f"comment on this translation. Just return the result. "
+        )
 
         response = client.chat.completions.create(
-            model=g4f.models.gpt_35_turbo,
+            model=g4f.models.gpt_4,
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -66,7 +69,7 @@ def bug_control():
 
     try:
         response = client.chat.completions.create(
-            model=g4f.models.gpt_4o,
+            model=g4f.models.gpt_4,
             messages=[{"role": "user", "content": combined_input}],
         )
 
@@ -95,8 +98,8 @@ def generate_image():
         return jsonify({"error": f"Error generating image: {str(e)}"}), 500
 
 
-@app.route("/analyze-image", methods=["POST"])
-def analyze_image():
+@app.route("/transcribe-image", methods=["POST"])
+def transcribe_image():
     try:
         if "image" not in request.files:
             return jsonify({"error": "No image file provided"}), 400
@@ -108,9 +111,7 @@ def analyze_image():
         with open(image_path, "rb") as file:
             response = client.chat.completions.create(
                 model=g4f.models.gemini_pro,
-                messages=[
-                    {"role": "user", "content": "What can you see in this image?"}
-                ],
+                messages=[{"role": "user", "content": "Can you transcribe this image? "}],
                 image=file,
             )
 
@@ -118,7 +119,7 @@ def analyze_image():
 
         os.remove(image_path)
 
-        return jsonify({"analysis": analysis_result})
+        return jsonify({"transcribe": analysis_result})
     except Exception as e:
         return jsonify({"error": f"Error analyzing image: {str(e)}"}), 500
 
@@ -171,7 +172,7 @@ def interactive_chat():
         else:
             response = client.chat.completions.create(
                 messages=messages,
-                model=g4f.models.gpt_4,
+                model=g4f.models.gpt_35_turbo,
             )
 
         gpt_response = response.choices[0].message.content
@@ -191,18 +192,24 @@ def add_testcase():
             "following code to cover all branches. Provide them as TC-1, TC-2, etc. in a table view. Please only share "
             "Test Case ID, Description and Expected Outcome on the output table. You don't have to limit test cases "
             "with 10. Do not print any Spanish text. Do not share besides that. "
+            "Do not include any headers or additional text in the output. "
+            "Format the output as a markdown table without repeating headers or any additional lines. "
+            "Only provide the data rows without titles. "
+            "The first row should be: 'Test Case ID | Description | Expected Outcome' and no other headers should be included."
         )
         combined_input = (
             f"{prompt}\n\nRequirements:\n{requirements_text}\n\nCode:\n{input_text}"
         )
-
         response = client.chat.completions.create(
             model=g4f.models.claude_3_5_sonnet,
             messages=[{"role": "user", "content": combined_input}],
         )
+        corrected_text = response.choices[0].message.content.strip()
 
-        corrected_text = response.choices[0].message.content
-        return jsonify({"test_cases": corrected_text})
+        lines = corrected_text.splitlines()
+        new_test_cases = "\n".join(lines[1:])
+
+        return jsonify({"test_cases": new_test_cases})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -215,7 +222,7 @@ def how_to_reply():
         combined_input = f"{prompt} {input_text}"
 
         response = client.chat.completions.create(
-            model=g4f.models.gpt_4,
+            model=g4f.models.gpt_35_turbo,
             messages=[{"role": "user", "content": combined_input}],
         )
 
@@ -260,7 +267,7 @@ def recommend_cafe():
         prompt = (
             f"I will be meeting you between the postcodes from {country_1} {zip_code_1} and from {country_2} {zip_code_2}. "
             f"Can you recommend me a {venue_type} for the meeting? Let it be a middle point. "
-            "Please just write the meeting city and the name of the venue."
+            "Please just write the meeting city, the name and the address of the venue."
         )
 
         response = client.chat.completions.create(
@@ -270,6 +277,35 @@ def recommend_cafe():
 
         recommendation = response.choices[0].message.content
         return jsonify({"recommendation": recommendation})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/trip-planner", methods=["POST"])
+def trip_planner():
+    city_or_country = request.form.get("location", "")
+    start_date = request.form.get("start_date", "")
+    end_date = request.form.get("end_date", "")
+
+    if not city_or_country or not start_date or not end_date:
+        return jsonify({"error": "Location and date range are required."}), 400
+
+    try:
+        prompt = (
+            f"Can you make me a trip plan for {city_or_country}, including where to eat and drink locally, "
+            f"as well as special locations to visit? I have a trip planned from {start_date} to {end_date}. "
+            "Please return the result in a table view with the following columns: Date, Activity/Location, "
+            "Description/Notes, Dining Options, Events/Highlights. Do not include any headers or additional text. "
+            "Just provide the data rows without any titles."
+        )
+
+        response = client.chat.completions.create(
+            model=g4f.models.gpt_4,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        trip_plan = response.choices[0].message.content
+        return jsonify({"trip_plan": trip_plan})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
