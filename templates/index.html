@@ -233,7 +233,29 @@
                 tempTextArea.select();
                 document.execCommand("copy");
                 document.body.removeChild(tempTextArea);
-                alert("Copied to clipboard!");
+                showCopyAlert();
+            }
+
+            function showCopyAlert() {
+                const alertBox = document.createElement("div");
+                alertBox.innerText = "Copied!";
+                alertBox.style.position = "fixed";
+                alertBox.style.bottom = "20px";
+                alertBox.style.right = "20px";
+                alertBox.style.backgroundColor = "#4caf50";
+                alertBox.style.color = "white";
+                alertBox.style.padding = "10px";
+                alertBox.style.borderRadius = "5px";
+                alertBox.style.zIndex = "1000";
+                alertBox.style.transition = "opacity 0.5s ease-in-out";
+                alertBox.style.opacity = "1";
+                document.body.appendChild(alertBox);
+                setTimeout(() => {
+                    alertBox.style.opacity = "0";
+                    setTimeout(() => {
+                        document.body.removeChild(alertBox);
+                    }, 500);
+                }, 2000);
             }
 
             async function checkGrammar() {
@@ -339,11 +361,11 @@
                 hideLoading();
                 if (response.ok) {
                     const data = await response.json();
-                    chatBox.innerHTML += `<strong>You:</strong> ${userInput}<br><strong>Bot:</strong> ${data.response}<br><br>`;
+                    chatBox.innerHTML = `<strong>Bot:</strong> ${data.response}<br><strong>You:</strong> ${userInput}<br><br>` + chatBox.innerHTML;
                     document.getElementById("chatInput").value = "";
                     fileInput.value = "";
                 } else {
-                    chatBox.innerHTML += "An error occurred. Please try again.<br><br>";
+                    chatBox.innerHTML = "An error occurred. Please try again.<br><br>" + chatBox.innerHTML;
                 }
             }
 
@@ -467,6 +489,36 @@
                 }
             }
 
+            async function recommendCafe() {
+                showLoading();
+                const zipCode1 = document.getElementById("zipCode1Input").value;
+                const zipCode2 = document.getElementById("zipCode2Input").value;
+                const country1 = document.getElementById("country1Input").value;
+                const country2 = document.getElementById("country2Input").value;
+                const venueType = document.getElementById("venueTypeInput").value;
+
+                const response = await fetch("/recommend-cafe", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        zip_code_1: zipCode1,
+                        zip_code_2: zipCode2,
+                        country_1: country1,
+                        country_2: country2,
+                        venue_type: venueType,
+                    }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("cafeRecommendationOutput").innerText = data.recommendation || "Error";
+                } else {
+                    document.getElementById("cafeRecommendationOutput").innerText = "An error occurred.";
+                }
+            }
+
             window.onload = () => switchTab(4);
         </script>
     </head>
@@ -485,6 +537,7 @@
                 <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
                 <div class="tab" onclick="switchTab(7)">How to Reply</div>
                 <div class="tab" onclick="switchTab(8)">Process Requirements and Code</div>
+                <div class="tab" onclick="switchTab(9)">Cafe Recommendation</div>
             </div>
             <div class="content active-content">
                 <div class="form-section">
@@ -645,6 +698,53 @@ List any files, screenshots, or logs that are relevant.
                     <div class="output">
                         <p><strong>Analysis Result:</strong> <span id="analysisOutput"></span></p>
                         <button class="copy-button" onclick="copyToClipboard('analysisOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="zipCode1Input">Enter first zip code:</label>
+                    <input type="text" id="zipCode1Input" name="zip_code_1" required placeholder="Enter first zip code..." />
+
+                    <label for="zipCode2Input">Enter second zip code:</label>
+                    <input type="text" id="zipCode2Input" name="zip_code_2" required placeholder="Enter second zip code..." />
+
+                    <label for="country1Input">Choose first country:</label>
+                    <select id="country1Input" name="country_1" required>
+                        <option value="Netherlands" selected>Netherlands</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="United States">United States</option>
+                    </select>
+
+                    <label for="country2Input">Choose second country:</label>
+                    <select id="country2Input" name="country_2" required>
+                        <option value="Netherlands" selected>Netherlands</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="United States">United States</option>
+                    </select>
+
+                    <label for="venueTypeInput">Choose venue type:</label>
+                    <select id="venueTypeInput" name="venue_type">
+                        <option value="cafe" selected>Cafe</option>
+                        <option value="pub">Pub</option>
+                    </select>
+
+                    <button type="button" onclick="recommendCafe()">Get Recommendation</button>
+                    <div class="output">
+                        <p><strong>Recommendation:</strong> <span id="cafeRecommendationOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('cafeRecommendationOutput')">Copy</button>
                     </div>
                 </div>
             </div>
