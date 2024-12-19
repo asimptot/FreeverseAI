@@ -587,8 +587,6 @@
                     document.getElementById("tripPlanOutput").innerText = "An error occurred.";
                 }
             }
-
-            window.onload = () => switchTab(4);
         </script>
     </head>
     <body>
@@ -597,18 +595,19 @@
         </div>
         <div class="container">
             <div class="tabs">
-                <div class="tab active-tab" onclick="switchTab(0)">Grammar Check</div>
-                <div class="tab" onclick="switchTab(1)">Translation</div>
-                <div class="tab" onclick="switchTab(2)">Image Generation</div>
-                <div class="tab" onclick="switchTab(3)">Image Transcription</div>
-                <div class="tab" onclick="switchTab(4)">Interactive Chat</div>
-                <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
-                <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
-                <div class="tab" onclick="switchTab(7)">How to Reply</div>
-                <div class="tab" onclick="switchTab(8)">Process Requirements and Code</div>
-                <div class="tab" onclick="switchTab(9)">Venue Recommendation</div>
-                <div class="tab" onclick="switchTab(10)">Trip Planner</div>
-            </div>
+				<div class="tab active-tab" onclick="switchTab(0)">Interactive Chat</div>
+				<div class="tab" onclick="switchTab(1)">Grammar Check</div>
+				<div class="tab" onclick="switchTab(2)">Translation</div>
+				<div class="tab" onclick="switchTab(3)">Image Generation</div>
+				<div class="tab" onclick="switchTab(4)">Image Transcription</div>
+				<div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
+				<div class="tab" onclick="switchTab(6)">Add Test Cases</div>
+				<div class="tab" onclick="switchTab(7)">Process Requirements and Code</div>
+				<div class="tab" onclick="switchTab(8)">How to Reply</div>
+				<div class="tab" onclick="switchTab(9)">Venue Recommendation</div>
+				<div class="tab" onclick="switchTab(10)">Trip Planner</div>
+			</div>
+
             <div class="content active-content">
                 <div class="form-section">
                     <label for="grammarInput">Enter text for grammar check:</label>
