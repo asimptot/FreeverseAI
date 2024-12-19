@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Awesome AI</title>
+        <title>Zorlu AI</title>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
         <style>
             * {
@@ -323,21 +323,21 @@
                 }
             }
 
-            async function analyzeImage() {
+            async function transcribeImage() {
                 showLoading();
                 const formData = new FormData();
                 const fileInput = document.getElementById("imageFileInput");
                 formData.append("image", fileInput.files[0]);
-                const response = await fetch("/analyze-image", {
+                const response = await fetch("/transcribe-image", {
                     method: "POST",
                     body: formData,
                 });
                 hideLoading();
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById("imageAnalysisOutput").innerText = data.analysis || "Error";
+                    document.getElementById("imageTranscriptionOutput").innerText = data.transcribe || "Error";
                 } else {
-                    document.getElementById("imageAnalysisOutput").innerText = "An error occurred.";
+                    document.getElementById("imageTranscriptionOutput").innerText = "An error occurred.";
                 }
             }
 
@@ -519,6 +519,75 @@
                 }
             }
 
+            async function generateTripPlan() {
+                showLoading();
+                const location = document.getElementById("locationInput").value;
+                const startDate = document.getElementById("startDateInput").value;
+                const endDate = document.getElementById("endDateInput").value;
+
+                const response = await fetch("/trip-planner", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        location: location,
+                        start_date: startDate,
+                        end_date: endDate,
+                    }),
+                });
+                hideLoading();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Response Data:", data);
+                    const tripPlan = data.trip_plan || "Error";
+
+                    if (!tripPlan || tripPlan.trim() === "") {
+                        document.getElementById("tripPlanOutput").innerText = "No trip plan available.";
+                        return;
+                    }
+
+                    let tableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
+                    tableHTML += "<thead>";
+                    tableHTML += "<tr>";
+                    tableHTML += "<th>Date</th>";
+                    tableHTML += "<th>Activity/Location</th>";
+                    tableHTML += "<th>Description/Notes</th>";
+                    tableHTML += "<th>Dining Options</th>";
+                    tableHTML += "<th>Events/Highlights</th>";
+                    tableHTML += "</tr>";
+                    tableHTML += "</thead>";
+                    tableHTML += "<tbody>";
+
+                    tripPlan.split("\n").forEach((line, index) => {
+                        if (line.trim() === "") return;
+
+                        const columns = line
+                            .split("|")
+                            .map((col) => col.trim())
+                            .filter((col) => col);
+
+                        if (columns.length >= 4) {
+                            tableHTML += "<tr>";
+                            tableHTML += `<td>${columns[0] || ""}</td>`;
+                            tableHTML += `<td>${columns[1] || ""}</td>`;
+                            tableHTML += `<td>${columns[2] || ""}</td>`;
+                            tableHTML += `<td>${columns[3] || ""}</td>`;
+                            tableHTML += `<td>${columns[4] || ""}</td>`;
+                            tableHTML += "</tr>";
+                        }
+                    });
+
+                    tableHTML += "</tbody>";
+                    tableHTML += "</table>";
+
+                    document.getElementById("tripPlanOutput").innerHTML = tableHTML;
+                } else {
+                    document.getElementById("tripPlanOutput").innerText = "An error occurred.";
+                }
+            }
+
             window.onload = () => switchTab(4);
         </script>
     </head>
@@ -531,13 +600,14 @@
                 <div class="tab active-tab" onclick="switchTab(0)">Grammar Check</div>
                 <div class="tab" onclick="switchTab(1)">Translation</div>
                 <div class="tab" onclick="switchTab(2)">Image Generation</div>
-                <div class="tab" onclick="switchTab(3)">Image Analysis</div>
+                <div class="tab" onclick="switchTab(3)">Image Transcription</div>
                 <div class="tab" onclick="switchTab(4)">Interactive Chat</div>
                 <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
                 <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
                 <div class="tab" onclick="switchTab(7)">How to Reply</div>
                 <div class="tab" onclick="switchTab(8)">Process Requirements and Code</div>
-                <div class="tab" onclick="switchTab(9)">Cafe Recommendation</div>
+                <div class="tab" onclick="switchTab(9)">Venue Recommendation</div>
+                <div class="tab" onclick="switchTab(10)">Trip Planner</div>
             </div>
             <div class="content active-content">
                 <div class="form-section">
@@ -586,12 +656,12 @@
             </div>
             <div class="content">
                 <div class="form-section">
-                    <label for="imageFileInput">Upload an image for analysis:</label>
+                    <label for="imageFileInput">Upload an image for transcription:</label>
                     <input type="file" id="imageFileInput" accept="image/*" />
-                    <button type="button" onclick="analyzeImage()">Analyze Image</button>
+                    <button type="button" onclick="transcribeImage()">Transcribe Image</button>
                     <div class="output">
-                        <p><strong>Analysis:</strong> <span id="imageAnalysisOutput"></span></p>
-                        <button class="copy-button" onclick="copyToClipboard('imageAnalysisOutput')">Copy</button>
+                        <p><strong>Transcriptions:</strong> <span id="imageTranscriptionOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('imageTranscriptionOutput')">Copy</button>
                     </div>
                 </div>
             </div>
@@ -739,12 +809,32 @@ List any files, screenshots, or logs that are relevant.
                     <select id="venueTypeInput" name="venue_type">
                         <option value="cafe" selected>Cafe</option>
                         <option value="pub">Pub</option>
+                        <option value="hotel">Hotel</option>
                     </select>
 
                     <button type="button" onclick="recommendCafe()">Get Recommendation</button>
                     <div class="output">
                         <p><strong>Recommendation:</strong> <span id="cafeRecommendationOutput"></span></p>
                         <button class="copy-button" onclick="copyToClipboard('cafeRecommendationOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="locationInput">Enter City or Country:</label>
+                    <input type="text" id="locationInput" name="location" required placeholder="Type the city or country..." />
+
+                    <label for="startDateInput">Start Date:</label>
+                    <input type="date" id="startDateInput" name="start_date" required />
+
+                    <label for="endDateInput">End Date:</label>
+                    <input type="date" id="endDateInput" name="end_date" required />
+
+                    <button type="button" onclick="generateTripPlan()">Generate Trip Plan</button>
+                    <div class="output">
+                        <p><strong>Trip Plan:</strong></p>
+                        <div id="tripPlanOutput"></div>
+                        <button class="copy-button" onclick="copyToClipboard('tripPlanOutput')">Copy</button>
                     </div>
                 </div>
             </div>
