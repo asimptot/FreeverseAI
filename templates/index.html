@@ -201,21 +201,22 @@
         <script>
             let activeTab = 0;
 
-            function switchTab(tabIndex) {
-                document.querySelectorAll(".tab").forEach((tab, index) => {
-                    tab.classList.remove("active-tab");
-                    if (index === tabIndex) {
-                        tab.classList.add("active-tab");
-                    }
-                });
+			function switchTab(tabIndex) {
+				activeTab = tabIndex;
+				document.querySelectorAll(".tab").forEach((tab, index) => {
+					tab.classList.remove("active-tab");
+					if (index === activeTab) {
+						tab.classList.add("active-tab");
+					}
+				});
 
-                document.querySelectorAll(".content").forEach((content, index) => {
-                    content.classList.remove("active-content");
-                    if (index === tabIndex) {
-                        content.classList.add("active-content");
-                    }
-                });
-            }
+				document.querySelectorAll(".content").forEach((content, index) => {
+					content.classList.remove("active-content");
+					if (index === activeTab) {
+						content.classList.add("active-content");
+					}
+				});
+			}
 
             function showLoading() {
                 document.querySelector(".loading").style.display = "block";
@@ -610,6 +611,18 @@
 
             <div class="content active-content">
                 <div class="form-section">
+                    <label for="chatInput">Enter message for the assistant:</label>
+                    <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
+
+                    <label for="chatFileInput">Upload an image or XML file (optional):</label>
+                    <input type="file" id="chatFileInput" accept=".xml, image/*" />
+
+                    <button type="button" onclick="startChat()">Start Chat</button>
+                    <div id="chatBox" class="chat-box" readonly></div>
+                </div>
+            </div>
+			<div class="content">
+                <div class="form-section">
                     <label for="grammarInput">Enter text for grammar check:</label>
                     <textarea id="grammarInput" name="text" required placeholder="Type your text here..."></textarea>
                     <button type="button" onclick="checkGrammar()">Check Grammar</button>
@@ -662,18 +675,6 @@
                         <p><strong>Transcriptions:</strong> <span id="imageTranscriptionOutput"></span></p>
                         <button class="copy-button" onclick="copyToClipboard('imageTranscriptionOutput')">Copy</button>
                     </div>
-                </div>
-            </div>
-            <div class="content">
-                <div class="form-section">
-                    <label for="chatInput">Enter message for the assistant:</label>
-                    <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
-
-                    <label for="chatFileInput">Upload an image or XML file (optional):</label>
-                    <input type="file" id="chatFileInput" accept=".xml, image/*" />
-
-                    <button type="button" onclick="startChat()">Start Chat</button>
-                    <div id="chatBox" class="chat-box" readonly></div>
                 </div>
             </div>
             <div class="content">
