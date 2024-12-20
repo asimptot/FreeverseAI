@@ -1,12 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 from g4f.client import Client
 import g4f, os, warnings
-from flask_cors import CORS
 
 warnings.filterwarnings("ignore")
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
 client = Client()
 messages = []
 
